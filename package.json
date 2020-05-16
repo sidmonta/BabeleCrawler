@@ -1,0 +1,41 @@
+{
+  "name": "babelecrawler",
+  "version": "0.0.1",
+  "description": "Crawler for RDF link",
+  "main": "./lib/index.js",
+  "files": [
+    "src",
+    "lib"
+  ],
+  "module": "./lib/index.js",
+  "typings": "./lib/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc -p tsconfig.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sidmonta/BabeleCrawler.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/@sidmonta"
+  },
+  "keywords": [
+    "LOD",
+    "Crawler"
+  ],
+  "author": "Sidmonta <sidmonta.15@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sidmonta/BabeleCrawler/issues"
+  },
+  "homepage": "https://github.com/sidmonta/BabeleCrawler#readme",
+  "devDependencies": {
+    "typescript": "^3.9.2"
+  },
+  "dependencies": {
+    "@sidmonta/babelelibrary": "0.0.5",
+    "ramda": "^0.27.0",
+    "rxjs": "^6.5.5"
+  }
+}
