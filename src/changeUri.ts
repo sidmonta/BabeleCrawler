@@ -15,6 +15,7 @@ export const checkViaf: (uri: URI) => string = createCheck('viaf', (uri: URI) =>
 export const allCheck = pipe(checkWikidata, checkViaf)
 
 function baseChangeURI() {
+
   let aggregate: Tools.NonEmptyArray<(uri: URI) => URI> = [checkWikidata, checkViaf]
   const control = (is?: string, change?: (uri: URI) => URI) => {
     if (is && change) {

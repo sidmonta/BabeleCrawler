@@ -1,19 +1,20 @@
 import Crawler from '../src'
 
 describe('Crawler', function () {
-  jest.setTimeout(30000);
+  jest.setTimeout(300000);
 
   it('add', function (done) {
     const crawler = new Crawler()
 
-    crawler.onNewNode(quad => {
-      if (quad) {
-        console.log(quad.subject.value)
-        expect(0).toBe(7)
-        done()
-      }
-    })
+    crawler.getNewNodeStream().subscribe(quad => {
+      // console.log(quad.subject.value)
+      expect(quad).not.toBe(null)
+    }, console.error, done)
 
-    crawler.run('http://www.wikidata.org/entity/Q95716156')
+    crawler.getNewSourceStream().subscribe(source => {
+      expect(source).not.toBe(null)
+    }, console.error, done)
+
+    crawler.run('https://viaf.org/viaf/34644407')
   })
 })

@@ -38,7 +38,7 @@ const checkSameAs: (node: Quad) => URI = (node: Quad): URI =>
   includes(node.predicate.value, [
     'http://www.w3.org/2002/07/owl#sameAs',
     'http://schema.org/sameAs'
-  ])
+  ]) || includes(node.predicate.value, 'prop/direct-normalized')
     ? node.object.value
     : ''
 
@@ -137,9 +137,10 @@ export default class Crawler {
      * corrispondono all'identificativo del soggetto e che non sono vuote.
      * @param uri
      */
-    const donwloadRDF = (uri: URI) => {
+    const donwloadRDF = (uri: URI): Observable<Quad> => {
       const id = getID(uri)
       this.historyID.add(id) // Mi salvo l'identificativo cercato per non cercarlo di nuovo successivamente.
+      console.log(checkURIForDownload(uri))
       return fetchURI(uri).pipe(
         filterQuadByIncludedService(id), // Filtro le triple solo che appartengono all'identificativo del soggetto
         filter(filtQuad) // Filtro le triple che non sono vuote.
@@ -249,7 +250,6 @@ export default class Crawler {
    */
   private sameDomain(domain: URI): boolean {
     let dom = extractDomain(domain) // estrae il dominio di dall'URI
-
     if (isNil(dom) || this.cachePlugin.has(dom)) {
       return true
     } else {
