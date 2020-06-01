@@ -128,7 +128,7 @@ export default class Crawler {
     const checkURIForDownload = pipe(allCheck, checkUri)
     // Funzione che si fa la fetch al servizio LOD per una determinata URI
     // Prima applica le modifiche all'URI per il servizio richiesto
-    const fetchURI = pipe(checkURIForDownload, Rx.fatchSPARQL)
+    const fetchURI = pipe(checkURIForDownload, Rx.fetchSPARQL)
     // Istanzia una cache di default. Il plugin può essere sostituita in seguito
     this.cachePlugin = new Services.InMemoryPlugin<string, void>()
 
