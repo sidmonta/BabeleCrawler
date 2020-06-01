@@ -1,7 +1,7 @@
 import { identity, pipe, includes, isNil, equals } from 'ramda'
 import { Quad, Store, N3Store } from 'n3'
 import { Observable, Subject, Subscription } from 'rxjs'
-import { filter, mergeMap } from 'rxjs/operators'
+import { delay, filter, mergeMap, tap } from 'rxjs/operators'
 import { Lod, Rx, Services } from '@sidmonta/babelelibrary'
 import extractDomain from 'extract-domain'
 import { allCheck } from './changeUri'
@@ -120,10 +120,15 @@ export default class Crawler {
   private cachePlugin: Services.CachePlugin<URI, void>
 
   /**
+   * Tiene traccia del numero di risorse "sameAs" ancora da analizzare
+   */
+  private counterSameAs: number = 0
+
+  /**
    * Costruttore del Crawler
    * @param [checkUri] funzione opzionale che trasforma le URI nella versione per ritornare il file RDF
    */
-  constructor(checkUri: CheckURI = identity) {
+  constructor (checkUri: CheckURI = identity) {
     // Unisco alla funzione personalizzata dell'utente, le modifiche alle URL per i servizi Wikidata e VIAF
     const checkURIForDownload = pipe(allCheck, checkUri)
     // Funzione che si fa la fetch al servizio LOD per una determinata URI
@@ -136,15 +141,35 @@ export default class Crawler {
      * Funzione che si occupa di fare la chiamata all'URI, filtrando le triple ritornate solo per quelle che
      * corrispondono all'identificativo del soggetto e che non sono vuote.
      * @param uri
+     * @return Observable<Quad> Lo stream delle quadruple ricavate dalla fetch della risorsa
      */
     const donwloadRDF = (uri: URI): Observable<Quad> => {
       const id = getID(uri)
       this.historyID.add(id) // Mi salvo l'identificativo cercato per non cercarlo di nuovo successivamente.
-      console.log(checkURIForDownload(uri))
-      return fetchURI(uri).pipe(
+      const fetch$ = fetchURI(uri).pipe(
         filterQuadByIncludedService(id), // Filtro le triple solo che appartengono all'identificativo del soggetto
         filter(filtQuad) // Filtro le triple che non sono vuote.
       )
+
+      /**
+       * Tramite questo stream tengo traccia del fatto che si sta o meno ancora analizzando dei sameAs.
+       */
+      fetch$
+        .pipe(delay(100)) // Per ovviare al fatto che prima voglio si attivi la sottoscrizione di this.download$
+        .subscribe(
+          _ => {}, // Ad ogni nuova tripla non faccio nulla.
+          _ => {}, // Lo stesso se viene generato un errore
+          () => {
+            // Il sameAs è analizzato, allora lo tolgo dal conteggio
+            this.counterSameAs--
+            // Se non ho più sameAs da analizzare completo gli stream.
+            if (this.counterSameAs === 0) {
+              this.sameAs.complete()
+              this.quadUpcoming.complete()
+            }
+          })
+
+      return fetch$
     }
 
     /**
@@ -152,6 +177,7 @@ export default class Crawler {
      */
     this.download$ = this.sameAs$.pipe(
       filter((uri: URI) => !this.historyID.has(getID(uri))), // Filtro solo i sameAs già analizzati
+      tap(_ => { this.counterSameAs++ }), // Incremento il counter per monitorare l'uso di un altro sameAs
       mergeMap(donwloadRDF) // Passo lo stream dei <sameAs> con lo stream delle chiamate fetch
     )
 
@@ -173,7 +199,7 @@ export default class Crawler {
    * Incomincia a cercare tutte le triple associate a questa URI anche su altre banche dati
    * @param uri uri da cui partire per la ricerca
    */
-  run(uri: URI) {
+  run (uri: URI) {
     if (!this.sameDomain(uri)) {
       this.sameAs.next(uri)
     }
@@ -186,7 +212,7 @@ export default class Crawler {
    * @param {string} [fil] regex per filtrare le query che arrivano e ottenere solo quelle desiderate.
    * Parametro opzionale
    */
-  public onNewNode(callback: (v: Quad) => void, fil?: string): void {
+  public onNewNode (callback: (v: Quad) => void, fil?: string): void {
     let filterQuad = fil ? Lod.checkQuad(fil) : _ => true
     this.quadUpcoming$
       .pipe(filter((q: Quad) => q && filterQuad(q)))
@@ -197,7 +223,7 @@ export default class Crawler {
    * Metodo/evento per essere notificati ogni qual volta si è trovata una nuova base dati LOD
    * @param {(url: string) => void)} callback funzione da eseguire ogni qualvolta si è trovata una nuova banca dati da scansionare
    */
-  public onNewSource(callback: (url: string) => void): void {
+  public onNewSource (callback: (url: string) => void): void {
     this.sameAs$.subscribe(callback)
   }
 
@@ -205,7 +231,7 @@ export default class Crawler {
    * Ritorna lo stream in cui ogni evento è una tripla trovata durante la ricerca.
    * @param fil Filtra le triple solo se contengono il valore di fil
    */
-  public getNewNodeStream(fil?: string) {
+  public getNewNodeStream (fil?: string) {
     let filterQuad = fil ? Lod.checkQuad(fil) : _ => true
     return this.quadUpcoming$.pipe(filter((q: Quad) => q && filterQuad(q)))
   }
@@ -213,14 +239,14 @@ export default class Crawler {
   /**
    * Ritorna lo stream per le triple <sameAs> che corrispondono ai servizi analizzati durante la navigazione
    */
-  public getNewSourceStream() {
+  public getNewSourceStream () {
     return this.sameAs$
   }
 
   /**
    * Interrompe il crawler
    */
-  public end(): void {
+  public end (): void {
     this.subscribeDownload.unsubscribe()
     this.quadUpcoming.unsubscribe()
     this.sameAs.unsubscribe()
@@ -229,7 +255,7 @@ export default class Crawler {
   /**
    * Re-inizializza il crawler resettando i vari registri di informazioni
    */
-  public clear(): void {
+  public clear (): void {
     this.quadStore = new Store()
     this.historyID = new Set<string>()
     this.cachePlugin.flush()
@@ -239,7 +265,7 @@ export default class Crawler {
    * Imposta il plugin di cache da utilizzare durante la navigazione
    * @param plugin plugin per la cache
    */
-  public setCache(plugin: Services.CachePlugin<string, never>): void {
+  public setCache (plugin: Services.CachePlugin<string, never>): void {
     this.cachePlugin = plugin
   }
 
@@ -248,7 +274,7 @@ export default class Crawler {
    * @param domain dominio che si sta analizzando
    * @returns {boolean} se ho già analizzato qulla URI
    */
-  private sameDomain(domain: URI): boolean {
+  private sameDomain (domain: URI): boolean {
     let dom = extractDomain(domain) // estrae il dominio di dall'URI
     if (isNil(dom) || this.cachePlugin.has(dom)) {
       return true
