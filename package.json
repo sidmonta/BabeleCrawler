@@ -1,6 +1,6 @@
 {
   "name": "babelecrawler",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Crawler for RDF link",
   "main": "./lib/index.js",
   "files": [
@@ -24,7 +24,7 @@
     "LOD",
     "Crawler"
   ],
-  "author": "Sidmonta <sidmonta.15@gmail.com>",
+  "author": "Luca Montanera <sidmonta.15@gmail.com>",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/sidmonta/BabeleCrawler/issues"
@@ -40,7 +40,7 @@
     "typescript": "^3.9.3"
   },
   "dependencies": {
-    "@sidmonta/babelelibrary": "0.0.6",
+    "@sidmonta/babelelibrary": "0.0.7",
     "extract-domain": "^2.2.1",
     "n3": "^1.3.7",
     "ramda": "^0.27.0",
