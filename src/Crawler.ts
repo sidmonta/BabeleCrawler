@@ -4,7 +4,6 @@ import { Observable, Subject, Subscription } from 'rxjs'
 import { delay, filter, mergeMap, tap } from 'rxjs/operators'
 import { Lod, Rx, Services } from '@sidmonta/babelelibrary'
 import extractDomain from 'extract-domain'
-import { allCheck } from './changeUri'
 
 /**
  * Semplice alias per definire il tipo di una URI
@@ -129,11 +128,9 @@ export default class Crawler {
    * @param [checkUri] funzione opzionale che trasforma le URI nella versione per ritornare il file RDF
    */
   constructor (checkUri: CheckURI = identity) {
-    // Unisco alla funzione personalizzata dell'utente, le modifiche alle URL per i servizi Wikidata e VIAF
-    const checkURIForDownload = pipe(allCheck, checkUri)
     // Funzione che si fa la fetch al servizio LOD per una determinata URI
     // Prima applica le modifiche all'URI per il servizio richiesto
-    const fetchURI = pipe(checkURIForDownload, Rx.fetchSPARQL)
+    const fetchURI = pipe(checkUri, Rx.fetchSPARQL)
     // Istanzia una cache di default. Il plugin può essere sostituita in seguito
     this.cachePlugin = new Services.InMemoryPlugin<string, void>()
 
