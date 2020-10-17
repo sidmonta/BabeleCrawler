@@ -141,7 +141,7 @@ export default class Crawler {
      * @return Observable<Quad> Lo stream delle quadruple ricavate dalla fetch della risorsa
      */
     const donwloadRDF = (uri: URI): Observable<Quad> => {
-      const id = getID(uri)
+      const id = getID(uri) // Recupero l'identificativo della risorsa
       this.historyID.add(id) // Mi salvo l'identificativo cercato per non cercarlo di nuovo successivamente.
       const fetch$ = fetchURI(uri).pipe(
         filterQuadByIncludedService(id), // Filtro le triple solo che appartengono all'identificativo del soggetto
@@ -256,6 +256,7 @@ export default class Crawler {
     this.quadStore = new Store()
     this.historyID = new Set<string>()
     this.cachePlugin.flush()
+    this.counterSameAs = 0
   }
 
   /**
