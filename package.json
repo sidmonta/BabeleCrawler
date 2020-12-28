@@ -1,5 +1,5 @@
 {
-  "name": "babelecrawler",
+  "name": "@sidmonta/babelecrawler",
   "version": "0.0.2",
   "description": "Crawler for RDF link",
   "main": "./lib/index.js",
@@ -18,7 +18,7 @@
     "url": "git+https://github.com/sidmonta/BabeleCrawler.git"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com/@sidmonta"
+    "registry": "https://npm.pkg.github.com"
   },
   "keywords": [
     "LOD",
