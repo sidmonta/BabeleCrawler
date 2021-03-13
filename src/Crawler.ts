@@ -1,13 +1,10 @@
 import { identity, pipe, includes, isNil, equals } from 'ramda'
-import { Quad, Store, N3Store } from 'n3'
+import { Quad, Store } from 'n3'
 import { Observable, Subject, Subscription } from 'rxjs'
 import { delay, filter, mergeMap, tap } from 'rxjs/operators'
 import { Lod, Rx, Services } from '@sidmonta/babelelibrary'
 import extractDomain from 'extract-domain'
 
-/**
- * Semplice alias per definire il tipo di una URI
- */
 type URI = string
 
 /**
@@ -84,7 +81,7 @@ export default class Crawler {
    * Repository che contiene tutte le triple analizzate per un soggetto.
    * Questo registro è utile perché l'oggetto N3Store mette a disposizione dei metodi per navigare agilmente il registro
    */
-  public quadStore: N3Store = new Store()
+  public quadStore: Store = new Store()
 
   /**
    * Soggetto, cioè l'emettitore degli eventi, per le triple che contengono <sameAs>
@@ -140,7 +137,7 @@ export default class Crawler {
      * @param uri
      * @return Observable<Quad> Lo stream delle quadruple ricavate dalla fetch della risorsa
      */
-    const donwloadRDF = (uri: URI): Observable<Quad> => {
+    const downloadRDF = (uri: URI): Observable<Quad> => {
       const id = getID(uri) // Recupero l'identificativo della risorsa
       this.historyID.add(id) // Mi salvo l'identificativo cercato per non cercarlo di nuovo successivamente.
       const fetch$ = fetchURI(uri).pipe(
@@ -175,7 +172,7 @@ export default class Crawler {
     this.download$ = this.sameAs$.pipe(
       filter((uri: URI) => !this.historyID.has(getID(uri))), // Filtro solo i sameAs già analizzati
       tap(_ => { this.counterSameAs++ }), // Incremento il counter per monitorare l'uso di un altro sameAs
-      mergeMap(donwloadRDF) // Passo lo stream dei <sameAs> con lo stream delle chiamate fetch
+      mergeMap(downloadRDF) // Passo lo stream dei <sameAs> con lo stream delle chiamate fetch
     )
 
     // Sottoscrivo allo streaming delle chiamate
