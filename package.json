@@ -1,6 +1,6 @@
 {
   "name": "@sidmonta/babelecrawler",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Crawler for RDF link",
   "main": "./lib/index.js",
   "files": [
